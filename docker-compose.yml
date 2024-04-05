@@ -1,0 +1,43 @@
+version: '3.7'
+
+services:
+  db:
+    image: mysql:8
+    container_name: db_test_db
+    env_file:
+      - .env
+    networks:
+      - db-test
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - db:/var/lib/mysql
+    restart: no
+
+  cli:
+    build:
+      dockerfile: Dockerfile
+      target: php-cli-base
+    container_name: db_test_cli
+    working_dir: /var/www/db_test
+    env_file:
+      - .env
+    volumes:
+      - './:/var/www/db_test'
+    depends_on:
+      - db
+    command: 'tail -f /dev/null'
+    networks:
+      - db-test
+    restart: no
+
+networks:
+  db-test:
+    name: db-test
+    driver: bridge
+
+volumes:
+  db:
