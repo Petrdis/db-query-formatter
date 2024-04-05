@@ -13,9 +13,13 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-    volumes:
-      - db:/var/lib/mysql
     restart: no
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   cli:
     build:
@@ -27,17 +31,15 @@ services:
       - .env
     volumes:
       - './:/var/www/db_test'
-    depends_on:
-      - db
     command: 'tail -f /dev/null'
     networks:
       - db-test
     restart: no
+    depends_on:
+      db:
+        condition: service_healthy
 
 networks:
   db-test:
     name: db-test
     driver: bridge
-
-volumes:
-  db:
